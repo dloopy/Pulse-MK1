@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx vitest:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(timeout 12 npm run dev)"
     ]
   }
 }
