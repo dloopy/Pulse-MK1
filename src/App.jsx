@@ -1,17 +1,20 @@
-import { Display } from './components/Display'
+import { useState } from 'react'
+import { useMetronome } from './hooks/useMetronome'
 
 export default function App() {
+  const [bpm, setBpm] = useState(120)
+  const [running, setRunning] = useState(false)
+  const { beatIdx, ciActive, start, stop } = useMetronome({
+    bpm, tsIdx: 0, vol: 75, ciOn: false, mode: 'play',
+    tr: { target: 160, step: 2, bars: 4 }, running,
+    onBpmChange: setBpm, onTrainerComplete: () => {},
+  })
+
   return (
-    <div style={{ padding: 40, background: '#E8E4DE', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <Display mode="play" running={false} ciActive={false} ciOn={false}
-        bpm={120} tsIdx={0} tr={{ target: 160, step: 2, bars: 4 }}
-        trRunning={false} trProgress={0} beatIdx={0} />
-      <Display mode="play" running={true} ciActive={false} ciOn={true}
-        bpm={120} tsIdx={0} tr={{ target: 160, step: 2, bars: 4 }}
-        trRunning={false} trProgress={0} beatIdx={2} />
-      <Display mode="train" running={true} ciActive={false} ciOn={false}
-        bpm={130} tsIdx={0} tr={{ target: 160, step: 2, bars: 4 }}
-        trRunning={true} trProgress={0.33} beatIdx={0} />
+    <div style={{ padding: 40 }}>
+      <div>BPM: {bpm} | Beat: {beatIdx} | CI: {String(ciActive)}</div>
+      <button onClick={() => { setRunning(true); start() }}>Start</button>
+      <button onClick={() => { setRunning(false); stop() }}>Stop</button>
     </div>
   )
 }
