@@ -1,0 +1,36 @@
+/* src/styles/tokens.css */
+:root {
+  /* Accent colours */
+  --color-play: #C8501A;
+  --color-train: #4A8FA8;
+  --color-timesig: #7A9E5A;
+  --color-countin: #E8A020;
+  --color-amber: #E8A020;
+
+  /* Surfaces */
+  --surface-panel: #F7F5F1;
+  --surface-display: #EDEAE4;      /* cream — used for display outer/bezel */
+  --surface-display-dark: #0D0D0B; /* dark OLED — used for display inner */
+  --surface-stage: #E8E4DE;
+
+  /* Borders */
+  --border-panel: #E0DBD4;
+  --border-display: #D0CBC4;
+  --border-secondary: #D4CFC8;
+
+  /* Text */
+  --text-primary: #1A1714;
+  --text-secondary: #8A8078;
+  --text-tertiary: #C4BFB8;
+  --text-muted: #C8C3BC;
+
+  /* Dot-matrix display text — cream on dark bg */
+  --display-lit: rgba(240, 232, 210, 0.92);
+  --display-unlit: rgba(240, 232, 210, 0.06);
+  --display-dim: rgba(240, 232, 210, 0.55);
+
+  /* Radius */
+  --radius-panel: 18px;
+  --radius-display: 8px;
+  --radius-btn: 7px;
+}
