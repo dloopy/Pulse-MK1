@@ -4,17 +4,19 @@ import { useMetronome } from '../hooks/useMetronome'
 import { loadState, saveState } from '../hooks/useLocalStorage'
 import { TIME_SIGNATURES } from '../constants/timeSigs'
 import { SUBS } from '../constants/subdivisions'
+import { SOUNDS } from '../constants/sounds'
 import { Display } from './Display'
 import { Knob } from './Knob'
 import { LEDRow } from './LEDRow'
 import { ModeSwitch } from './ModeSwitch'
 import { TimeSigButton } from './TimeSigButton'
 import { CountInButton } from './CountInButton'
+import { SoundButton } from './SoundButton'
 import { Footswitch } from './Footswitch'
 
 const MIN_BPM = 30
 const MAX_BPM = 240
-const AMBER = '#E8A020'
+const AMBER   = '#E8A020'
 
 // Detent accumulator: adds delta to accumulator, steps value by 1 per threshold crossed
 function applyDetent(accRef, delta, threshold, min, max, current) {
@@ -25,20 +27,26 @@ function applyDetent(accRef, delta, threshold, min, max, current) {
   return val
 }
 
+// ── Corner screw ──────────────────────────────────────────────────────────────
+function PanelScrew({ className }) {
+  return <div className={`panel-screw ${className}`} />
+}
+
 export function MetronomePedal() {
   // ── Config state (persisted to localStorage) ──────────────────────────────
-  const [bpm, setBpm]       = useState(() => loadState().bpm)
-  const [tsIdx, setTsIdx]   = useState(() => loadState().tsIdx)
-  const [subIdx, setSubIdx] = useState(() => loadState().subIdx)
-  const [vol, setVol]       = useState(() => loadState().vol)
-  const [tr, setTr]         = useState(() => loadState().tr)
+  const [bpm, setBpm]         = useState(() => loadState().bpm)
+  const [tsIdx, setTsIdx]     = useState(() => loadState().tsIdx)
+  const [subIdx, setSubIdx]   = useState(() => loadState().subIdx)
+  const [vol, setVol]         = useState(() => loadState().vol)
+  const [soundIdx, setSoundIdx] = useState(() => loadState().soundIdx)
+  const [tr, setTr]           = useState(() => loadState().tr)
 
-  // ── Runtime state (not persisted — resets on page load) ───────────────────
-  const [mode, setMode]     = useState('play')
+  // ── Runtime state (not persisted) ─────────────────────────────────────────
+  const [mode, setMode]       = useState('play')
   const [running, setRunning] = useState(false)
-  const [ciOn, setCiOn]     = useState(false)
+  const [ciOn, setCiOn]       = useState(false)
 
-  // ── Detent accumulators (refs — not state) ─────────────────────────────────
+  // ── Detent accumulators ────────────────────────────────────────────────────
   const subAccRef  = useRef(0)
   const barsAccRef = useRef(0)
   const stepAccRef = useRef(0)
@@ -48,42 +56,36 @@ export function MetronomePedal() {
 
   // ── Persist config on change ───────────────────────────────────────────────
   useEffect(() => {
-    saveState({ bpm, tsIdx, subIdx, vol, tr })
-  }, [bpm, tsIdx, subIdx, vol, tr])
+    saveState({ bpm, tsIdx, subIdx, vol, soundIdx, tr })
+  }, [bpm, tsIdx, subIdx, vol, soundIdx, tr])
 
   // ── useMetronome callbacks ────────────────────────────────────────────────
-  const handleBpmChange = useCallback((newBpm) => setBpm(newBpm), [])
-  const handleTrainerComplete = useCallback(() => {
-    // Engine keeps running — Display detects trRunning false-edge for \o/ animation
-    // MetronomePedal takes no action here; user stops engine via footswitch
-  }, [])
+  const handleBpmChange       = useCallback((newBpm) => setBpm(newBpm), [])
+  const handleTrainerComplete = useCallback(() => {}, [])
 
   // ── Hook ─────────────────────────────────────────────────────────────────
   const {
     beatIdx, ciActive, trRunning, trProgress,
     start, stop, startTrainer, stopTrainer
   } = useMetronome({
-    bpm, tsIdx, vol, ciOn, mode, tr, running,
+    bpm, tsIdx, subIdx, vol, ciOn, mode, tr, running, soundIdx,
     onBpmChange: handleBpmChange,
     onTrainerComplete: handleTrainerComplete,
   })
 
-  // ── Footswitch handler — see spec footswitch behaviour table ──────────────
+  // ── Footswitch handler ────────────────────────────────────────────────────
   const handleFootswitch = useCallback(() => {
     if (mode === 'play') {
       if (running) { setRunning(false); stop() }
       else         { setRunning(true);  start() }
     } else {
-      // Train mode — single press starts engine + trainer together
       if (!running) {
         setRunning(true)
-        startTrainer() // internally calls start() if not already running
+        startTrainer()
       } else if (trRunning) {
-        // Trainer is advancing — stop everything
         setRunning(false)
-        stop() // stop() also resets trRunning internally
+        stop()
       } else {
-        // Trainer complete, engine still running — stop engine
         setRunning(false)
         stop()
       }
@@ -100,7 +102,6 @@ export function MetronomePedal() {
         handleFootswitch()
       }
 
-      // Tap tempo — play mode only
       if (e.code === 'KeyT' && mode === 'play') {
         const now = Date.now()
         tapTimesRef.current = tapTimesRef.current.filter(t => now - t < 3000)
@@ -117,8 +118,6 @@ export function MetronomePedal() {
   }, [mode, handleFootswitch])
 
   // ── Knob onChange handlers ────────────────────────────────────────────────
-
-  // Centre: tempo (play, continuous) / target (train, continuous)
   function handleCentreChange(delta) {
     if (mode === 'play') {
       setBpm(v => Math.min(MAX_BPM, Math.max(MIN_BPM, v + delta)))
@@ -127,7 +126,6 @@ export function MetronomePedal() {
     }
   }
 
-  // Left: sub (play, detented 18px) / bars (train, detented 14px)
   function handleLeftChange(delta) {
     if (mode === 'play') {
       const next = applyDetent(subAccRef, delta, 18, 0, SUBS.length - 1, subIdx)
@@ -138,7 +136,6 @@ export function MetronomePedal() {
     }
   }
 
-  // Right: vol (play, continuous 0.6×) / step (train, detented 14px)
   function handleRightChange(delta) {
     if (mode === 'play') {
       setVol(v => Math.min(100, Math.max(0, v + delta)))
@@ -152,28 +149,37 @@ export function MetronomePedal() {
   function handleModeChange(newMode) {
     if (newMode === mode) return
     setMode(newMode)
-    // Reset detent accumulators — knob values remap on mode change
     subAccRef.current  = 0
     barsAccRef.current = 0
     stepAccRef.current = 0
-    // Engine continues running — no stop()
+  }
+
+  // ── Sound selector ────────────────────────────────────────────────────────
+  function handleSoundChange() {
+    setSoundIdx(i => (i + 1) % SOUNDS.length)
   }
 
   // ── Knob props resolved by mode ───────────────────────────────────────────
   const leftKnob = mode === 'play'
-    ? { value: subIdx, min: 0, max: SUBS.length - 1, label: 'sub',   displayValue: SUBS[subIdx],         detented: true,  indicator: 'dot'  }
-    : { value: tr.bars, min: 1, max: 16,              label: 'bars',  displayValue: `${tr.bars}b`,        detented: true,  indicator: 'dot'  }
+    ? { value: subIdx,   min: 0,       max: SUBS.length - 1, label: 'sub',    displayValue: SUBS[subIdx],        detented: true,  indicator: 'dot'  }
+    : { value: tr.bars,  min: 1,       max: 16,              label: 'bars',   displayValue: `${tr.bars}b`,       detented: true,  indicator: 'dot'  }
 
   const centreKnob = mode === 'play'
-    ? { value: bpm,      min: MIN_BPM, max: MAX_BPM,  label: 'tempo',  displayValue: `${Math.round(bpm)}` }
-    : { value: tr.target,min: MIN_BPM, max: MAX_BPM,  label: 'target', displayValue: `${tr.target}`       }
+    ? { value: bpm,      min: MIN_BPM, max: MAX_BPM,         label: 'tempo',  displayValue: `${Math.round(bpm)}` }
+    : { value: tr.target,min: MIN_BPM, max: MAX_BPM,         label: 'target', displayValue: `${tr.target}`       }
 
   const rightKnob = mode === 'play'
-    ? { value: vol,     min: 0, max: 100,              label: 'vol',   displayValue: `${Math.round(vol)}%`, detented: false, indicator: 'line' }
-    : { value: tr.step, min: 1, max: 20,               label: 'step',  displayValue: `+${tr.step}`,         detented: true,  indicator: 'line' }
+    ? { value: vol,      min: 0,       max: 100,             label: 'vol',    displayValue: `${Math.round(vol)}%`, detented: false, indicator: 'line' }
+    : { value: tr.step,  min: 1,       max: 20,              label: 'step',   displayValue: `+${tr.step}`,         detented: true,  indicator: 'line' }
 
   return (
     <div className={`panel${mode === 'train' ? ' train-mode' : ''}`}>
+
+      {/* Corner screws */}
+      <PanelScrew className="tl" />
+      <PanelScrew className="tr" />
+      <PanelScrew className="bl" />
+      <PanelScrew className="br" />
 
       {/* Top bar: wordmark + LEDs */}
       <div className="topbar">
@@ -190,25 +196,26 @@ export function MetronomePedal() {
       <Display
         mode={mode} running={running} ciActive={ciActive} ciOn={ciOn}
         bpm={bpm} tsIdx={tsIdx} tr={tr} trRunning={trRunning}
-        trProgress={trProgress} beatIdx={beatIdx}
+        trProgress={trProgress} beatIdx={beatIdx} soundIdx={soundIdx}
       />
 
       {/* Mode switch */}
       <ModeSwitch mode={mode} onChange={handleModeChange} />
 
-      {/* Button row */}
+      {/* Button row: time sig · sound · count-in */}
       <div className="btn-row">
         <TimeSigButton tsIdx={tsIdx} onClick={() => setTsIdx(i => (i + 1) % TIME_SIGNATURES.length)} />
+        <SoundButton soundIdx={soundIdx} onClick={handleSoundChange} />
         <CountInButton ciOn={ciOn} onClick={() => setCiOn(v => !v)} />
       </div>
 
       <div className="divider" />
 
-      {/* Knob row — all knobs use amber for the hardware glow look */}
+      {/* Knob row */}
       <div className="knobs-row">
-        <Knob {...leftKnob}   color={AMBER} size="small"  sensitivity={1}                          onChange={handleLeftChange} />
-        <Knob {...centreKnob} color={AMBER} size="large"  sensitivity={0.9} indicator="line"       onChange={handleCentreChange} />
-        <Knob {...rightKnob}  color={AMBER} size="small"  sensitivity={mode === 'play' ? 0.6 : 1}  onChange={handleRightChange} />
+        <Knob {...leftKnob}   color={AMBER} size="small"  sensitivity={1}                         onChange={handleLeftChange} />
+        <Knob {...centreKnob} color={AMBER} size="large"  sensitivity={0.9} indicator="line"      onChange={handleCentreChange} />
+        <Knob {...rightKnob}  color={AMBER} size="small"  sensitivity={mode === 'play' ? 0.6 : 1} onChange={handleRightChange} />
       </div>
 
       {/* Footswitch + keyboard hints */}
