@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse · mk1 — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#E8E4DE;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'DM Sans',sans-serif;}
+
+.panel{
+  background:#F7F5F1;border-radius:18px;border:1px solid #E0DBD4;
+  padding:20px 24px 26px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  box-shadow:0 1px 0 rgba(255,255,255,0.9) inset,0 3px 20px rgba(0,0,0,0.09);
+  width:340px;
+  transition:border-color 0.3s;
+}
+.panel.train-mode{border-color:#9BB5C8;}
+
+/* Top bar */
+.topbar{width:100%;display:flex;align-items:center;justify-content:space-between;}
+.wordmark{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.28em;text-transform:uppercase;color:#C4BFB8;}
+.beat-row{display:flex;gap:5px;align-items:center;}
+.led{border-radius:50%;transition:background 0.04s,border-color 0.04s;}
+.led.b1{width:10px;height:10px;}
+.led.bn{width:8px;height:8px;}
+.led.off-p{background:#D8D3CC;border:1px solid #C8C3BB;}
+.led.on-p{background:#C8501A;border-color:#A03E12;}
+.led.off-t{background:#C8D8E4;border:1px solid #A8C0CE;}
+.led.on-t{background:#4A8FA8;border-color:#3A7A92;}
+.led.ci{background:#E8A020;border-color:#C08010 !important;}
+
+/* Display */
+.disp-outer{background:#E4E1DB;border:1px solid #D0CBC4;border-radius:8px;padding:2px;box-shadow:inset 0 1px 4px rgba(0,0,0,0.08);width:100%;}
+.disp-inner{background:#EDEAE4;border-radius:6px;padding:11px 14px 13px;position:relative;overflow:hidden;min-height:80px;display:flex;flex-direction:column;justify-content:center;}
+
+/* Badges */
+.badge-ts{position:absolute;top:7px;right:10px;display:flex;flex-direction:column;align-items:center;line-height:1;}
+.badge-ts .ts-n{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#7A9E5A;line-height:1;}
+.badge-ts .ts-line{width:14px;height:1px;background:#7A9E5A;opacity:0.5;margin:1px 0;}
+.badge-ts .ts-d{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#7A9E5A;line-height:1;}
+.badge-ci{position:absolute;bottom:9px;right:10px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#E8A020;opacity:0;transition:opacity 0.2s;}
+.badge-ci.on{opacity:1;}
+
+/* Animation area — left of BPM */
+.disp-content{display:flex;align-items:center;gap:10px;}
+.anim-area{font-family:'DM Mono',monospace;font-size:13px;color:#A8A098;width:32px;text-align:center;flex-shrink:0;line-height:1.3;min-height:40px;display:flex;align-items:center;justify-content:center;}
+
+/* Play state */
+.d-play{display:none;flex-direction:column;gap:1px;}
+.d-play.active{display:flex;}
+.bpm-row{display:flex;align-items:baseline;gap:8px;}
+.bpm-big{font-family:'DM Mono',monospace;font-size:52px;font-weight:300;color:#1A1714;letter-spacing:-2px;line-height:1;transition:color 0.2s;}
+.bpm-big.stopped{color:#C0B8B0;}
+.bpm-big.ci-glow{color:#E8A020;}
+.bpm-unit{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;letter-spacing:0.22em;text-transform:uppercase;color:#A8A098;margin-bottom:3px;align-self:flex-end;}
+
+/* Train state */
+.d-train{display:none;flex-direction:column;gap:5px;}
+.d-train.active{display:flex;}
+.train-bpm{font-family:'DM Mono',monospace;font-size:36px;font-weight:300;color:#1A1714;letter-spacing:-1px;line-height:1;}
+.train-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.tr-arrow{font-family:'DM Mono',monospace;font-size:12px;color:#4A8FA8;}
+.tr-val{font-family:'DM Mono',monospace;font-size:12px;color:#4A8FA8;}
+.tr-sep{font-family:'DM Mono',monospace;font-size:10px;color:#C4BFB8;}
+.tr-dim{font-family:'DM Mono',monospace;font-size:12px;color:#8A8078;}
+
+/* Idle animation — full display */
+.d-idle{display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:58px;}
+.d-idle.active{display:flex;}
+.idle-char{font-family:'DM Mono',monospace;font-size:14px;color:#B8B0A8;text-align:center;line-height:1.4;transition:opacity 0.3s;}
+
+.prog-track{position:absolute;bottom:0;left:0;right:0;height:3px;background:transparent;border-radius:0 0 6px 6px;overflow:hidden;}
+.prog-fill{height:100%;width:0%;border-radius:0 0 6px 6px;transition:width 0.5s;background:#4A8FA8;}
+
+/* Mode switch */
+.mode-switch{display:flex;align-items:center;background:#EDEAE5;border:1px solid #D8D3CC;border-radius:20px;padding:3px;user-select:none;}
+.mode-opt{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;padding:5px 16px;border-radius:16px;cursor:pointer;color:#A8A098;transition:background 0.2s,color 0.2s;}
+.mode-opt.active-play{background:#F7F5F1;color:#C8501A;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.mode-opt.active-train{background:#4A8FA8;color:#fff;box-shadow:0 1px 3px rgba(74,143,168,0.3);}
+
+/* Button row */
+.btn-row{width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 2px;}
+.icon-btn{display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid #D4CFC8;background:#EDEAE5;cursor:pointer;user-select:none;transition:background 0.12s,border-color 0.12s,transform 0.06s,box-shadow 0.06s;box-shadow:0 1px 0 #C8C3BC;}
+.icon-btn:active{transform:translateY(1px);box-shadow:none;}
+.ts-icon-btn{width:42px;height:38px;flex-direction:column;gap:0;padding:4px 8px;}
+.ts-icon-btn .ts-num{font-family:'DM Mono',monospace;font-weight:500;font-size:13px;color:#7A9E5A;line-height:1;}
+.ts-icon-btn .ts-bar{width:20px;height:1px;background:#7A9E5A;opacity:0.45;margin:1px 0;}
+.ts-icon-btn:hover{background:#EEF4E8;border-color:#B8D49A;}
+.ci-icon-btn{width:38px;height:38px;}
+.ci-inner{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ci-arc{width:18px;height:9px;border:1.5px solid #C4BFB8;border-bottom:none;border-radius:9px 9px 0 0;transition:border-color 0.15s;}
+.ci-bars{display:flex;gap:2px;align-items:flex-end;}
+.ci-bar{width:3px;border-radius:1px;background:#C4BFB8;transition:background 0.15s;}
+.ci-bar.b1{height:10px;}.ci-bar.b2{height:7px;}.ci-bar.b3{height:5px;}.ci-bar.b4{height:7px;}
+.ci-icon-btn.active{background:#FDF8EE;border-color:#F0C878;}
+.ci-icon-btn.active .ci-arc{border-color:#E8A020;}
+.ci-icon-btn.active .ci-bar{background:#E8A020;}
+
+.divider{width:100%;height:1px;background:#E8E4DE;}
+
+/* Knobs */
+.knobs-row{display:flex;align-items:flex-end;justify-content:center;gap:22px;width:100%;}
+.knob-unit{display:flex;flex-direction:column;align-items:center;gap:6px;user-select:none;-webkit-user-select:none;}
+.knob-val{font-family:'DM Mono',monospace;font-size:10px;min-height:14px;text-align:center;transition:color 0.3s;}
+.knob-label{font-family:'DM Sans',sans-serif;font-size:7px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;transition:color 0.3s;}
+.c-play{color:#C8501A;}.c-play-dim{color:#8A8078;}.c-play-lbl{color:#B8B0A8;}
+.c-train{color:#4A8FA8;}.c-train-lbl{color:#6AAFC8;}
+.knob-el{cursor:ns-resize;touch-action:none;}
+@keyframes dp{0%{transform:scale(1)}40%{transform:scale(0.953)}100%{transform:scale(1)}}
+.dp{animation:dp 0.11s ease-out;}
+
+/* Footswitch */
+.foot-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px;}
+.footswitch{width:54px;height:54px;border-radius:50%;background:#EDEAE5;border:2px solid #D4CFC8;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;transition:background 0.1s,border-color 0.1s,transform 0.06s,box-shadow 0.06s;box-shadow:0 2px 0 #C0BBB4,0 3px 6px rgba(0,0,0,0.1);user-select:none;}
+.footswitch:active,.footswitch.pressed{transform:translateY(2px);box-shadow:none;}
+.footswitch.run-play{border-color:#C8501A;}
+.footswitch.run-train{border-color:#4A8FA8;}
+.footswitch.run-ci{border-color:#E8A020;}
+.fs-dot{width:9px;height:9px;border-radius:50%;background:#C4BFB8;transition:background 0.2s;}
+.footswitch.run-play .fs-dot{background:#C8501A;}
+.footswitch.run-train .fs-dot{background:#4A8FA8;}
+.footswitch.run-ci .fs-dot{background:#E8A020;}
+.fs-lbl{font-family:'DM Sans',sans-serif;font-size:7px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#B0A89E;transition:color 0.2s;}
+.footswitch.run-play .fs-lbl,.footswitch.run-ci .fs-lbl{color:#C8501A;}
+.footswitch.run-train .fs-lbl{color:#4A8FA8;}
+.foot-hints{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}
+.foot-hint{font-family:'DM Sans',sans-serif;font-size:8px;color:#C8C3BC;}
+.foot-hint span{display:inline-block;border:1px solid #D8D3CC;border-radius:3px;padding:1px 5px;font-family:'DM Mono',monospace;font-size:8px;color:#B8B0A8;margin-left:3px;}
+</style>
+</head>
+<body>
+
+<div class="panel" id="panel">
+
+  <!-- Top bar + LEDs -->
+  <div class="topbar">
+    <div class="wordmark">Pulse · mk1</div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div class="beat-row" id="beatRow"></div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:7px;letter-spacing:0.2em;color:#C8C3BC;text-transform:uppercase;">beat</div>
+    </div>
+  </div>
+
+  <!-- Display -->
+  <div class="disp-outer">
+    <div class="disp-inner">
+      <div class="badge-ts">
+        <div class="ts-n" id="badgeTsN">4</div>
+        <div class="ts-line"></div>
+        <div class="ts-d" id="badgeTsD">4</div>
+      </div>
+      <div class="badge-ci" id="badgeCi">CI</div>
+
+      <!-- Idle state — takes over when stopped -->
+      <div class="d-idle active" id="dIdle">
+        <div class="idle-char" id="idleChar">&#x2500;&#x2500; &#x25CB; &#x2500;&#x2500;</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:#C8C3BC;letter-spacing:0.2em;margin-top:2px;">pulse</div>
+      </div>
+
+      <!-- Play state -->
+      <div class="d-play" id="dPlay">
+        <div class="disp-content">
+          <div class="anim-area" id="animArea"></div>
+          <div class="bpm-row">
+            <div class="bpm-big" id="bpmBig">120</div>
+            <div class="bpm-unit">bpm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Train state -->
+      <div class="d-train" id="dTrain">
+        <div class="train-bpm" id="trainBpm">120</div>
+        <div class="train-row">
+          <span class="tr-arrow">&#x2192;</span>
+          <span class="tr-val" id="trTarget">160</span>
+          <span class="tr-sep">&#xB7;</span>
+          <span class="tr-dim" id="trStep">+2 bpm</span>
+          <span class="tr-sep">&#xB7;</span>
+          <span class="tr-dim" id="trBars">4 bars</span>
+        </div>
+      </div>
+
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+  </div>
+
+  <!-- Mode switch -->
+  <div class="mode-switch">
+    <div class="mode-opt active-play" id="optPlay" onclick="setMode('play')">Play</div>
+    <div class="mode-opt" id="optTrain" onclick="setMode('train')">Train</div>
+  </div>
+
+  <!-- Button row -->
+  <div class="btn-row">
+    <div class="icon-btn ts-icon-btn" id="tsBtn" onclick="cycleTs()">
+      <div class="ts-num" id="tsBtnN">4</div>
+      <div class="ts-bar"></div>
+      <div class="ts-num" id="tsBtnD">4</div>
+    </div>
+    <div class="icon-btn ci-icon-btn" id="ciBtn" onclick="toggleCi()">
+      <div class="ci-inner">
+        <div class="ci-arc"></div>
+        <div class="ci-bars">
+          <div class="ci-bar b1"></div>
+          <div class="ci-bar b2"></div>
+          <div class="ci-bar b3"></div>
+          <div class="ci-bar b4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Knobs -->
+  <div class="knobs-row">
+    <!-- Left: Sub / Bars -->
+    <div class="knob-unit">
+      <div class="knob-val c-play" id="leftVal">1/4</div>
+      <svg class="knob-el" id="knobLeft" width="62" height="62" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="33" fill="none" stroke="#E0DBD4" stroke-width="3.5"/>
+        <path id="leftArc" fill="none" stroke="#C8501A" stroke-width="3.5" stroke-linecap="round"/>
+        <g id="leftTicks"></g>
+        <circle cx="36" cy="36" r="26" fill="#EDEAE5"/>
+        <circle cx="36" cy="36" r="26" fill="none" stroke="#F5F3EF" stroke-width="2"/>
+        <circle cx="36" cy="36" r="26" fill="none" stroke="#D4CFC8" stroke-width="0.75"/>
+        <circle cx="36" cy="36" r="20" fill="#F2EFE9"/>
+        <circle id="leftDot" cx="36" cy="18" r="3.5" fill="#C8501A"/>
+        <circle cx="36" cy="36" r="5" fill="#E8E4DE"/>
+        <circle cx="36" cy="36" r="5" fill="none" stroke="#D0CBC3" stroke-width="0.75"/>
+      </svg>
+      <div class="knob-label c-play-lbl" id="leftLabel">sub</div>
+    </div>
+
+    <!-- Centre: Tempo / Target -->
+    <div class="knob-unit">
+      <div class="knob-val c-play" id="centreVal">120</div>
+      <svg class="knob-el" id="knobCentre" width="98" height="98" viewBox="0 0 108 108">
+        <circle cx="54" cy="54" r="50" fill="none" stroke="#E0DBD4" stroke-width="4"/>
+        <path id="centreArc" fill="none" stroke="#C8501A" stroke-width="4" stroke-linecap="round"/>
+        <g id="centreTicks"></g>
+        <circle cx="54" cy="54" r="40" fill="#EDEBE6"/>
+        <circle cx="54" cy="54" r="40" fill="none" stroke="#F8F6F2" stroke-width="2.5"/>
+        <circle cx="54" cy="54" r="40" fill="none" stroke="#D8D3CC" stroke-width="0.75"/>
+        <circle cx="54" cy="54" r="31" fill="#F4F1EC"/>
+        <circle cx="54" cy="54" r="31" fill="none" stroke="#E2DDD6" stroke-width="1"/>
+        <circle cx="54" cy="54" r="18" fill="#F0EDE8"/>
+        <circle cx="54" cy="54" r="18" fill="none" stroke="#DDD9D2" stroke-width="0.75"/>
+        <line id="centreLine" x1="54" y1="16" x2="54" y2="27" stroke="#C8501A" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="54" cy="54" r="5" fill="#E8E4DE"/>
+        <circle cx="54" cy="54" r="5" fill="none" stroke="#CEC9C2" stroke-width="0.75"/>
+        <line x1="51" y1="54" x2="57" y2="54" stroke="#C8C3BC" stroke-width="0.75"/>
+      </svg>
+      <div class="knob-label c-play-lbl" id="centreLabel">tempo</div>
+    </div>
+
+    <!-- Right: Vol / Step -->
+    <div class="knob-unit">
+      <div class="knob-val c-play-dim" id="rightVal">75%</div>
+      <svg class="knob-el" id="knobRight" width="62" height="62" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="33" fill="none" stroke="#E0DBD4" stroke-width="3.5"/>
+        <path id="rightArc" fill="none" stroke="#C8501A" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="36" cy="36" r="26" fill="#EDEAE5"/>
+        <circle cx="36" cy="36" r="26" fill="none" stroke="#F5F3EF" stroke-width="2"/>
+        <circle cx="36" cy="36" r="26" fill="none" stroke="#D4CFC8" stroke-width="0.75"/>
+        <circle cx="36" cy="36" r="20" fill="#F2EFE9"/>
+        <line id="rightLine" x1="36" y1="18" x2="36" y2="24" stroke="#8A8078" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="36" cy="36" r="5" fill="#E8E4DE"/>
+        <circle cx="36" cy="36" r="5" fill="none" stroke="#D0CBC3" stroke-width="0.75"/>
+      </svg>
+      <div class="knob-label c-play-lbl" id="rightLabel">vol</div>
+    </div>
+  </div>
+
+  <!-- Footswitch -->
+  <div class="foot-row">
+    <div class="footswitch" id="footswitch" onclick="handleFoot()">
+      <div class="fs-dot"></div>
+      <div class="fs-lbl" id="fsLbl">start</div>
+    </div>
+    <div class="foot-hints">
+      <div class="foot-hint">start / stop <span>space</span></div>
+      <div class="foot-hint">tap tempo <span>t</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── TIME SIGNATURES ──
+const TS=[
+  {n:4,d:4,beats:4},
+  {n:3,d:4,beats:3},
+  {n:6,d:8,beats:6},
+  {n:2,d:4,beats:2},
+  {n:5,d:4,beats:5},
+  {n:7,d:8,beats:7},
+  {n:12,d:8,beats:12},
+  {n:9,d:8,beats:9},
+];
+const SUBS=['1/32','1/16T','1/16','1/8T','1/8','1/4T','1/4','1/2','1'];
+const MIN=30,MAX=240;
+const CP='#C8501A',CT='#4A8FA8';
+
+// ── STATE ──
+let bpm=120,subIdx=6,vol=75,leftDrag=0,rightDrag=0;
+let mode='play',running=false;
+let tsIdx=0;
+let ciOn=false,ciActive=false,ciBeat=0;
+let beatIdx=0,beatTimer=null,restartDebounce=null;
+let tr={target:160,step:2,bars:4};
+let trRunning=false,trBarCount=0,trStartBpm=120;
+let tapTimes=[];
+let actx=null;
+let animFrame=0,animTimer=null;
+let idleFrame=0,idleTimer=null;
+
+// ── AUDIO ──
+function getCtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function playTick(down,col){
+  try{
+    const c=getCtx(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.frequency.value=col==='ci'?1100:(down?820:580);
+    const v=(vol/100)*(down?0.12:0.06)*(col==='ci'?1.3:1);
+    g.gain.setValueAtTime(v,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.04);
+    o.start(c.currentTime);o.stop(c.currentTime+0.05);
+  }catch(e){}
+}
+
+// ── ASCII ANIMATIONS ──
+// Each animation is an array of frames, indexed by beat or time
+const ANIM={
+  '4/4': [ '&#x258F;','&#x258E;','&#x258D;','&#x258C;' ],  // left bar grows on each beat
+  '3/4': [ '&#x2572;','&#x2502;','&#x2571;' ],              // pendulum: \ | /
+  '6/8': [ '&#xB7;&#xB7;&#xB7;','&#xB7;&#xB7;&#xB7;','&#xB7;&#xB7;&#xB7;','&#x25AA;&#x25AA;&#x25AA;','&#x25AA;&#x25AA;&#x25AA;','&#x25AA;&#x25AA;&#x25AA;' ],
+  '5/4': [ '&#x2588;&#x2588;&#x2588;','&#x2588;&#x2588;&#x25A1;','&#x25A1;&#x25A1;&#x25A1;','&#x2588;&#x2588;&#x25A1;','&#x25A1;&#x25A1;&#x25A1;' ],
+  '7/8': [ '&#x2588;&#x2588;&#x2588;&#x2588;','&#x2588;&#x2588;&#x2588;&#x25A1;','&#x25A1;&#x25A1;&#x25A1;&#x25A1;','&#x2588;&#x2588;&#x25A1;&#x25A1;','&#x25A1;&#x25A1;&#x25A1;&#x25A1;','&#x2588;&#x2588;&#x2588;&#x25A1;','&#x25A1;&#x25A1;&#x25A1;&#x25A1;' ],
+  '12/8': [ '&#x2219;&#x2219;&#x2219;','&#x25CF;&#x2219;&#x2219;','&#x2219;&#x25CF;&#x2219;','&#x2219;&#x2219;&#x25CF;','&#x2219;&#x2219;&#x2219;','&#x25CF;&#x2219;&#x2219;','&#x2219;&#x25CF;&#x2219;','&#x2219;&#x2219;&#x25CF;','&#x2219;&#x2219;&#x2219;','&#x25CF;&#x2219;&#x2219;','&#x2219;&#x25CF;&#x2219;','&#x2219;&#x2219;&#x25CF;' ],
+  '9/8':  [ '&#x2219;&#x2219;&#x2219;','&#x25CF;&#x2219;&#x2219;','&#x2219;&#x25CF;&#x2219;','&#x2219;&#x2219;&#x25CF;','&#x2219;&#x2219;&#x2219;','&#x25CF;&#x2219;&#x2219;','&#x2219;&#x25CF;&#x2219;','&#x2219;&#x2219;&#x25CF;','&#x2219;&#x2219;&#x2219;' ],
+  '2/4':  [ '&#x25C4;','&#x25BA;' ],
+};
+
+// Idle animation frames — runs when stopped
+const IDLE_FRAMES=[
+  '&#x2500;&#x2500; &#x25CB; &#x2500;&#x2500;',
+  '&#x2500;&#x2500; &#x25CC; &#x2500;&#x2500;',
+  '&#x2500;&#x2500; &#x25CE; &#x2500;&#x2500;',
+  '&#x2500;&#x2500; &#x25CC; &#x2500;&#x2500;',
+];
+
+// Train animation — climbing character
+function trainAnimChar(){
+  const total=Math.abs(tr.target-trStartBpm);
+  const done=Math.abs(bpm-trStartBpm);
+  const pct=total>0?Math.min(1,done/total):0;
+  const steps=['&#x2581;','&#x2582;','&#x2583;','&#x2584;','&#x2585;','&#x2586;','&#x2587;','&#x2588;'];
+  return steps[Math.floor(pct*(steps.length-1))];
+}
+
+// Count-in animation
+const CI_FRAMES=['4','3','2','1'];
+
+function getAnimKey(){
+  const t=TS[tsIdx];
+  return t.n+'/'+t.d;
+}
+
+function updateAnim(beatCur){
+  const key=getAnimKey();
+  const frames=ANIM[key];
+  if(!frames)return;
+  const frame=frames[beatCur%frames.length];
+  document.getElementById('animArea').innerHTML=frame||'';
+}
+
+function startIdleAnim(){
+  clearInterval(idleTimer);
+  idleFrame=0;
+  idleTimer=setInterval(()=>{
+    idleFrame=(idleFrame+1)%IDLE_FRAMES.length;
+    document.getElementById('idleChar').innerHTML=IDLE_FRAMES[idleFrame];
+  },600);
+}
+function stopIdleAnim(){clearInterval(idleTimer);}
+
+// ── GEOMETRY ──
+function pxy(cx,cy,r,d){const a=(d-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+function arcD(cx,cy,r,s,e){
+  if(e-s<1)return'';
+  const[x1,y1]=pxy(cx,cy,r,s),[x2,y2]=pxy(cx,cy,r,e);
+  return'M'+x1.toFixed(2)+' '+y1.toFixed(2)+' A'+r+' '+r+' 0 '+(e-s>180?1:0)+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2);
+}
+function na(n){return 135+270*n;}
+
+function drawTicks(id,cx,cy,r1,r2,n,col){
+  const g=document.getElementById(id);if(!g)return;let h='';
+  for(let i=0;i<=n;i++){
+    const d=135+270*(i/n);
+    const[ax,ay]=pxy(cx,cy,r1,d),[bx,by]=pxy(cx,cy,r2,d);
+    h+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+(col||'#C4BFB8')+'" stroke-width="'+(i%4===0?1.1:0.55)+'" opacity="'+(i%4===0?0.55:0.28)+'"/>';
+  }
+  g.innerHTML=h;
+}
+function subTicks(col){
+  const g=document.getElementById('leftTicks'),n=SUBS.length-1;let h='';
+  for(let i=0;i<=n;i++){
+    const d=135+270*(i/n);
+    const[ax,ay]=pxy(36,36,30,d),[bx,by]=pxy(36,36,25.5,d);
+    h+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+(i===subIdx?col:'#B8B2AA')+'" stroke-width="'+(i===subIdx?2:0.8)+'" stroke-linecap="round"/>';
+  }
+  g.innerHTML=h;
+}
+function barTicks(col){
+  const g=document.getElementById('leftTicks'),n=15;let h='';
+  for(let i=0;i<=n;i++){
+    const d=135+270*(i/n);
+    const[ax,ay]=pxy(36,36,30,d),[bx,by]=pxy(36,36,25.5,d);
+    h+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+(i===(tr.bars-1)?col:'#B8B2AA')+'" stroke-width="'+(i===(tr.bars-1)?2:0.8)+'" stroke-linecap="round"/>';
+  }
+  g.innerHTML=h;
+}
+function stepTicks(col){
+  const g=document.getElementById('centreTicks');if(!g)return;let h='';
+  for(let i=0;i<=19;i++){
+    const d=135+270*(i/19);
+    const[ax,ay]=pxy(54,54,50,d),[bx,by]=pxy(54,54,45,d);
+    h+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+(i===(tr.step-1)?col:'#C4BFB8')+'" stroke-width="'+(i===(tr.step-1)?1.5:0.55)+'" opacity="'+(i===(tr.step-1)?0.85:0.28)+'"/>';
+  }
+  g.innerHTML=h;
+}
+
+// ── KNOB RENDERS ──
+function renderCentre(){
+  const col=mode==='play'?CP:CT;
+  const norm=mode==='play'?(bpm-MIN)/(MAX-MIN):(tr.target-MIN)/(MAX-MIN);
+  const deg=na(norm),rad=(deg-90)*Math.PI/180;
+  const ln=document.getElementById('centreLine');
+  ln.setAttribute('x1',(54+22*Math.cos(rad)).toFixed(2));
+  ln.setAttribute('y1',(54+22*Math.sin(rad)).toFixed(2));
+  ln.setAttribute('x2',(54+31*Math.cos(rad)).toFixed(2));
+  ln.setAttribute('y2',(54+31*Math.sin(rad)).toFixed(2));
+  ln.setAttribute('stroke',col);
+  const a=document.getElementById('centreArc');
+  a.setAttribute('d',norm>0.005?arcD(54,54,50,135,deg):'');
+  a.setAttribute('stroke',col);
+  document.getElementById('centreVal').textContent=Math.round(mode==='play'?bpm:tr.target);
+  document.getElementById('bpmBig').textContent=Math.round(bpm);
+  document.getElementById('trainBpm').textContent=Math.round(bpm);
+  if(mode==='train')stepTicks(col);
+  else drawTicks('centreTicks',54,54,50,45,20,'#C4BFB8');
+}
+function renderLeft(){
+  const col=mode==='play'?CP:CT;
+  if(mode==='play'){
+    const norm=subIdx/(SUBS.length-1),deg=na(norm),rad=(deg-90)*Math.PI/180;
+    document.getElementById('leftDot').setAttribute('cx',(36+14*Math.cos(rad)).toFixed(2));
+    document.getElementById('leftDot').setAttribute('cy',(36+14*Math.sin(rad)).toFixed(2));
+    document.getElementById('leftDot').setAttribute('fill',col);
+    const a=document.getElementById('leftArc');
+    a.setAttribute('d',subIdx>0?arcD(36,36,33,135,deg):'');
+    a.setAttribute('stroke',col);
+    document.getElementById('leftVal').textContent=SUBS[subIdx];
+    subTicks(col);
+  } else {
+    const norm=(tr.bars-1)/15,deg=na(norm),rad=(deg-90)*Math.PI/180;
+    document.getElementById('leftDot').setAttribute('cx',(36+14*Math.cos(rad)).toFixed(2));
+    document.getElementById('leftDot').setAttribute('cy',(36+14*Math.sin(rad)).toFixed(2));
+    document.getElementById('leftDot').setAttribute('fill',col);
+    const a=document.getElementById('leftArc');
+    a.setAttribute('d',norm>0.005?arcD(36,36,33,135,deg):'');
+    a.setAttribute('stroke',col);
+    document.getElementById('leftVal').textContent=tr.bars+'b';
+    barTicks(col);
+  }
+}
+function renderRight(){
+  if(mode==='play'){
+    const norm=vol/100,deg=na(norm),rad=(deg-90)*Math.PI/180;
+    const ln=document.getElementById('rightLine');
+    ln.setAttribute('x1',(36+13*Math.cos(rad)).toFixed(2));
+    ln.setAttribute('y1',(36+13*Math.sin(rad)).toFixed(2));
+    ln.setAttribute('x2',(36+18*Math.cos(rad)).toFixed(2));
+    ln.setAttribute('y2',(36+18*Math.sin(rad)).toFixed(2));
+    ln.setAttribute('stroke','#8A8078');
+    const a=document.getElementById('rightArc');
+    a.setAttribute('d',norm>0.005?arcD(36,36,33,135,deg):'');
+    a.setAttribute('stroke',CP);
+    document.getElementById('rightVal').textContent=Math.round(vol)+'%';
+  } else {
+    const norm=(tr.step-1)/19,deg=na(norm),rad=(deg-90)*Math.PI/180;
+    const ln=document.getElementById('rightLine');
+    ln.setAttribute('x1',(36+13*Math.cos(rad)).toFixed(2));
+    ln.setAttribute('y1',(36+13*Math.sin(rad)).toFixed(2));
+    ln.setAttribute('x2',(36+18*Math.cos(rad)).toFixed(2));
+    ln.setAttribute('y2',(36+18*Math.sin(rad)).toFixed(2));
+    ln.setAttribute('stroke',CT);
+    const a=document.getElementById('rightArc');
+    a.setAttribute('d',norm>0.005?arcD(36,36,33,135,deg):'');
+    a.setAttribute('stroke',CT);
+    document.getElementById('rightVal').textContent='+'+tr.step;
+  }
+}
+function refreshLabels(){
+  const vc=mode==='play'?'c-play':'c-train';
+  const rc=mode==='play'?'c-play-dim':'c-train';
+  const lc=mode==='play'?'c-play-lbl':'c-train-lbl';
+  document.getElementById('leftVal').className='knob-val '+vc;
+  document.getElementById('centreVal').className='knob-val '+vc;
+  document.getElementById('rightVal').className='knob-val '+rc;
+  ['leftLabel','centreLabel','rightLabel'].forEach(function(id){
+    document.getElementById(id).className='knob-label '+lc;
+  });
+  document.getElementById('leftLabel').textContent=mode==='play'?'sub':'bars';
+  document.getElementById('centreLabel').textContent=mode==='play'?'tempo':'target';
+  document.getElementById('rightLabel').textContent=mode==='play'?'vol':'step';
+}
+function refreshDisplay(){
+  const idle=!running&&!ciActive;
+  document.getElementById('dIdle').className='d-idle'+(idle?' active':'');
+  document.getElementById('dPlay').className='d-play'+((!idle&&mode==='play')?' active':'');
+  document.getElementById('dTrain').className='d-train'+((!idle&&mode==='train')?' active':'');
+  document.getElementById('bpmBig').classList.toggle('stopped',false);
+  if(mode==='train'){
+    document.getElementById('trTarget').textContent=tr.target;
+    document.getElementById('trStep').textContent='+'+tr.step+' bpm';
+    document.getElementById('trBars').textContent=tr.bars+' bars';
+  }
+  if(idle)startIdleAnim(); else stopIdleAnim();
+}
+function refreshProgress(){
+  const total=Math.abs(tr.target-trStartBpm),done=Math.abs(bpm-trStartBpm);
+  document.getElementById('progFill').style.width=(trRunning&&total>0?Math.min(100,done/total*100):0)+'%';
+}
+
+// ── TIME SIG ──
+function cycleTs(){
+  tsIdx=(tsIdx+1)%TS.length;
+  updateTsBadge();
+  rebuildLEDs();
+  const btn=document.getElementById('tsBtn');
+  btn.style.background='#EEF4E8';btn.style.borderColor='#A8CC88';
+  setTimeout(function(){btn.style.background='';btn.style.borderColor='';},130);
+}
+function updateTsBadge(){
+  const t=TS[tsIdx];
+  document.getElementById('badgeTsN').textContent=t.n;
+  document.getElementById('badgeTsD').textContent=t.d;
+  document.getElementById('tsBtnN').textContent=t.n;
+  document.getElementById('tsBtnD').textContent=t.d;
+}
+function toggleCi(){
+  ciOn=!ciOn;
+  document.getElementById('ciBtn').classList.toggle('active',ciOn);
+  document.getElementById('badgeCi').classList.toggle('on',ciOn);
+}
+
+// ── LEDs ──
+function rebuildLEDs(){
+  var beats=TS[tsIdx].beats;
+  var row=document.getElementById('beatRow');row.innerHTML='';
+  for(var i=0;i<beats;i++){
+    var d=document.createElement('div');
+    d.id='l'+i;
+    d.className='led '+(i===0?'b1':'bn')+' '+(mode==='play'?'off-p':'off-t');
+    row.appendChild(d);
+  }
+}
+function flashLEDs(cur,col){
+  var beats=TS[tsIdx].beats;
+  for(var i=0;i<beats;i++){
+    var el=document.getElementById('l'+i);if(!el)continue;
+    el.classList.remove('off-p','on-p','off-t','on-t','ci');
+    el.classList.add(i===cur?(col==='ci'?'ci':(mode==='play'?'on-p':'on-t')):(mode==='play'?'off-p':'off-t'));
+  }
+}
+function clearLEDs(){
+  var beats=TS[tsIdx].beats;
+  for(var i=0;i<beats;i++){
+    var el=document.getElementById('l'+i);
+    if(el){el.classList.remove('on-p','on-t','ci');el.classList.add(mode==='play'?'off-p':'off-t');}
+  }
+}
+
+// ── MODE ──
+function setMode(m){
+  if(mode===m)return;mode=m;
+  document.getElementById('optPlay').classList.toggle('active-play',m==='play');
+  document.getElementById('optPlay').classList.remove('active-train');
+  document.getElementById('optTrain').classList.toggle('active-train',m==='train');
+  document.getElementById('optTrain').classList.remove('active-play');
+  document.getElementById('panel').classList.toggle('train-mode',m==='train');
+  refreshLabels();refreshDisplay();rebuildLEDs();
+  renderCentre();renderLeft();renderRight();
+}
+
+// ── BEAT ENGINE ──
+function flash(){
+  var beats=TS[tsIdx].beats;
+  if(ciActive){
+    var b=ciBeat%beats;
+    flashLEDs(b,'ci');
+    // Count-in display
+    document.getElementById('animArea').innerHTML=CI_FRAMES[Math.max(0,beats-1-b)]||'';
+    document.getElementById('bpmBig').classList.toggle('ci-glow',b===0);
+    playTick(b===0,'ci');
+    ciBeat++;
+    if(ciBeat>=beats){
+      ciActive=false;beatIdx=0;
+      var fs=document.getElementById('footswitch');
+      fs.classList.remove('run-ci');
+      fs.classList.add(mode==='play'?'run-play':'run-train');
+      document.getElementById('bpmBig').classList.remove('ci-glow');
+      refreshDisplay();
+    }
+    return;
+  }
+  var cur=beatIdx%beats;
+  flashLEDs(cur,mode);
+  playTick(cur===0,mode);
+  // Update anim
+  if(mode==='train'&&trRunning){
+    document.getElementById('animArea').innerHTML=trainAnimChar();
+  } else {
+    updateAnim(cur);
+  }
+  if(mode==='train'&&trRunning&&cur===0){trBarCount++;if(trBarCount>=tr.bars)advanceTr();}
+  beatIdx++;
+}
+function startEngine(withCi){
+  clearInterval(beatTimer);
+  if(withCi&&ciOn){
+    ciActive=true;ciBeat=0;
+    var fs=document.getElementById('footswitch');
+    fs.classList.add('run-ci');fs.classList.remove('run-play','run-train');
+    document.getElementById('fsLbl').textContent='stop';
+  } else {
+    ciActive=false;
+    document.getElementById('footswitch').classList.add(mode==='play'?'run-play':'run-train');
+  }
+  refreshDisplay();
+  flash();beatTimer=setInterval(flash,(60/bpm)*1000);
+}
+function stopEngine(){
+  clearInterval(beatTimer);beatTimer=null;ciActive=false;
+  clearLEDs();
+  document.getElementById('bpmBig').classList.remove('ci-glow');
+  document.getElementById('animArea').innerHTML='';
+  refreshDisplay();
+}
+function schedRestart(){
+  clearTimeout(restartDebounce);
+  restartDebounce=setTimeout(function(){
+    if(running){clearInterval(beatTimer);beatTimer=setInterval(flash,(60/bpm)*1000);}
+  },260);
+}
+
+// ── FOOTSWITCH ──
+function handleFoot(){
+  var fs=document.getElementById('footswitch');
+  fs.classList.add('pressed');setTimeout(function(){fs.classList.remove('pressed');},100);
+  if(mode==='play'){
+    running=!running;
+    fs.classList.remove('run-play','run-train','run-ci');
+    if(running)fs.classList.add(ciOn?'run-ci':'run-play');
+    document.getElementById('fsLbl').textContent=running?'stop':'start';
+    if(running)startEngine(true);else{stopEngine();}
+  } else {
+    trRunning=!trRunning;
+    fs.classList.toggle('run-train',trRunning);fs.classList.remove('run-play','run-ci');
+    document.getElementById('fsLbl').textContent=trRunning?'stop':'start';
+    if(trRunning){trStartBpm=bpm;trBarCount=0;if(!running){running=true;startEngine(true);}}
+    refreshProgress();
+  }
+}
+function advanceTr(){
+  trBarCount=0;
+  var dir=tr.target>=trStartBpm?1:-1,next=bpm+tr.step*dir;
+  var done=dir>0?next>=tr.target:next<=tr.target;
+  bpm=done?tr.target:Math.min(MAX,Math.max(MIN,next));
+  if(done){
+    trRunning=false;
+    document.getElementById('footswitch').classList.remove('run-train');
+    document.getElementById('fsLbl').textContent='start';
+    // Celebration animation
+    document.getElementById('animArea').innerHTML='\\o/';
+    setTimeout(function(){document.getElementById('animArea').innerHTML='';},1000);
+    setTimeout(function(){document.getElementById('progFill').style.width='0%';},1200);
+  }
+  renderCentre();
+  clearInterval(beatTimer);
+  if(running)beatTimer=setInterval(flash,(60/bpm)*1000);
+  refreshProgress();
+  document.getElementById('trTarget').textContent=tr.target;
+}
+
+// ── DRAG ──
+function makeDrag(id,fn){
+  var el=document.getElementById(id),sy=0,on=false;
+  el.addEventListener('mousedown',function(e){on=true;sy=e.clientY;e.preventDefault();document.body.style.cursor='ns-resize';});
+  document.addEventListener('mousemove',function(e){if(!on)return;var d=sy-e.clientY;sy=e.clientY;if(Math.abs(d)>0)fn(d);});
+  document.addEventListener('mouseup',function(){on=false;document.body.style.cursor='';});
+  el.addEventListener('wheel',function(e){e.preventDefault();fn(e.deltaY<0?2:-2);},{passive:false});
+  el.addEventListener('touchstart',function(e){on=true;sy=e.touches[0].clientY;e.preventDefault();},{passive:false});
+  document.addEventListener('touchmove',function(e){if(!on)return;var d=sy-e.touches[0].clientY;sy=e.touches[0].clientY;fn(d*0.6);});
+  document.addEventListener('touchend',function(){on=false;});
+}
+makeDrag('knobCentre',function(d){
+  if(mode==='play'){bpm=Math.min(MAX,Math.max(MIN,bpm+d*0.9));renderCentre();schedRestart();}
+  else{tr.target=Math.min(MAX,Math.max(MIN,tr.target+Math.round(d*0.9)));document.getElementById('trTarget').textContent=tr.target;renderCentre();}
+});
+makeDrag('knobLeft',function(d){
+  if(mode==='play'){
+    leftDrag+=d;var t=18;
+    while(leftDrag>=t){subIdx=Math.min(SUBS.length-1,subIdx+1);leftDrag-=t;nudge();renderLeft();}
+    while(leftDrag<=-t){subIdx=Math.max(0,subIdx-1);leftDrag+=t;nudge();renderLeft();}
+  } else {
+    leftDrag+=d;var t=14;
+    while(leftDrag>=t){tr.bars=Math.min(16,tr.bars+1);leftDrag-=t;renderLeft();document.getElementById('trBars').textContent=tr.bars+' bars';}
+    while(leftDrag<=-t){tr.bars=Math.max(1,tr.bars-1);leftDrag+=t;renderLeft();document.getElementById('trBars').textContent=tr.bars+' bars';}
+  }
+});
+makeDrag('knobRight',function(d){
+  if(mode==='play'){vol=Math.min(100,Math.max(0,vol+d*0.6));renderRight();}
+  else{
+    rightDrag+=d;var t=14;
+    while(rightDrag>=t){tr.step=Math.min(20,tr.step+1);rightDrag-=t;renderRight();document.getElementById('trStep').textContent='+'+tr.step+' bpm';}
+    while(rightDrag<=-t){tr.step=Math.max(1,tr.step-1);rightDrag+=t;renderRight();document.getElementById('trStep').textContent='+'+tr.step+' bpm';}
+  }
+});
+function nudge(){var e=document.getElementById('knobLeft');e.classList.remove('dp');void e.offsetWidth;e.classList.add('dp');}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT')return;
+  if(e.code==='Space'){e.preventDefault();handleFoot();}
+  if(e.code==='KeyT'&&mode==='play'){
+    var now=Date.now();tapTimes=tapTimes.filter(function(t){return now-t<3000;});tapTimes.push(now);
+    if(tapTimes.length>=2){
+      var avg=tapTimes.slice(1).map(function(t,i){return t-tapTimes[i];}).reduce(function(a,b){return a+b;},0)/(tapTimes.length-1);
+      bpm=Math.min(MAX,Math.max(MIN,Math.round(60000/avg)));renderCentre();schedRestart();
+    }
+  }
+});
+
+// ── INIT ──
+rebuildLEDs();
+updateTsBadge();
+drawTicks('centreTicks',54,54,50,45,20,'#C4BFB8');
+renderCentre();renderLeft();renderRight();
+refreshDisplay();
+startIdleAnim();
+</script>
+</body>
+</html>
