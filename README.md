@@ -61,9 +61,17 @@ It runs entirely in the browser. Zero backend. All sound is synthesised in real-
 - Beat LEDs that flash in time with audio
 - Animated sound icon in the display — downbeat pulses larger and brighter
 - Physical-feeling knobs with recessed well + proud body SVG architecture
-- Inset mode switch slider
-- Piano-key style buttons with press depth
+- Knob labels flash in mode color (rust/teal) when switching Play↔Train, signaling that knob assignments have changed
+- Sound button briefly shows the sound name on press before switching to its icon
+- Inset mode switch slider with keyboard navigation and ARIA radio semantics
+- Uniform button row — all three buttons (time sig, sound, count-in) are the same size
 - Corner screws because of course
+
+**Accessibility**
+
+- Full keyboard navigation: Space to start/stop, T for tap tempo, Enter/Space on mode switch and footswitch
+- ARIA roles on all interactive controls — footswitch (`button`, `aria-pressed`), mode switch (`radiogroup`), sound button announces current sound
+- `prefers-reduced-motion` respected globally — all animations and transitions collapse for users who need it
 
 **Persistence**
 - All settings saved to `localStorage` — BPM, time sig, subdivision, volume, sound, trainer config
