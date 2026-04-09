@@ -17,6 +17,7 @@ import { Footswitch } from './Footswitch'
 const MIN_BPM = 30
 const MAX_BPM = 240
 const AMBER   = '#E8A020'
+const MODE_COLORS = { play: '#C8501A', train: '#4A8FA8' }
 
 // Detent accumulator: adds delta to accumulator, steps value by 1 per threshold crossed
 function applyDetent(accRef, delta, threshold, min, max, current) {
@@ -51,6 +52,11 @@ export function MetronomePedal() {
   const barsAccRef = useRef(0)
   const stepAccRef = useRef(0)
 
+  // ── Footswitch double-tap guard ───────────────────────────────────────────
+  const runningRef   = useRef(false)
+  const trRunningRef = useRef(false)
+  useEffect(() => { runningRef.current = running }, [running])
+
   // ── Tap tempo ─────────────────────────────────────────────────────────────
   const tapTimesRef = useRef([])
 
@@ -73,24 +79,31 @@ export function MetronomePedal() {
     onTrainerComplete: handleTrainerComplete,
   })
 
+  // Mirror trRunning into ref after hook destructure
+  useEffect(() => { trRunningRef.current = trRunning }, [trRunning])
+
   // ── Footswitch handler ────────────────────────────────────────────────────
   const handleFootswitch = useCallback(() => {
     if (mode === 'play') {
-      if (running) { setRunning(false); stop() }
-      else         { setRunning(true);  start() }
+      if (runningRef.current) {
+        runningRef.current = false
+        setRunning(false); stop()
+      } else {
+        runningRef.current = true
+        setRunning(true);  start()
+      }
     } else {
-      if (!running) {
+      if (!runningRef.current) {
+        runningRef.current = true
         setRunning(true)
         startTrainer()
-      } else if (trRunning) {
-        setRunning(false)
-        stop()
       } else {
+        runningRef.current = false
         setRunning(false)
         stop()
       }
     }
-  }, [mode, running, trRunning, start, stop, startTrainer])
+  }, [mode, start, stop, startTrainer])
 
   // ── Keyboard handler ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -165,8 +178,8 @@ export function MetronomePedal() {
     : { value: tr.bars,  min: 1,       max: 16,              label: 'bars',   displayValue: `${tr.bars}b`,       detented: true,  indicator: 'dot'  }
 
   const centreKnob = mode === 'play'
-    ? { value: bpm,      min: MIN_BPM, max: MAX_BPM,         label: 'tempo',  displayValue: `${Math.round(bpm)}` }
-    : { value: tr.target,min: MIN_BPM, max: MAX_BPM,         label: 'target', displayValue: `${tr.target}`       }
+    ? { value: bpm,      min: MIN_BPM, max: MAX_BPM,         label: 'tempo',  displayValue: '' }
+    : { value: tr.target,min: MIN_BPM, max: MAX_BPM,         label: 'target', displayValue: '' }
 
   const rightKnob = mode === 'play'
     ? { value: vol,      min: 0,       max: 100,             label: 'vol',    displayValue: `${Math.round(vol)}%`, detented: false, indicator: 'line' }
@@ -186,7 +199,7 @@ export function MetronomePedal() {
         <div className="wordmark">Pulse · mk1</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <LEDRow tsIdx={tsIdx} beatIdx={beatIdx} mode={mode} ciActive={ciActive} />
-          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7, letterSpacing: '0.2em', color: '#C8C3BC', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.2em', color: '#C8C3BC', textTransform: 'uppercase' }}>
             beat
           </div>
         </div>
@@ -213,9 +226,9 @@ export function MetronomePedal() {
 
       {/* Knob row */}
       <div className="knobs-row">
-        <Knob {...leftKnob}   color={AMBER} size="small"  sensitivity={1}                         onChange={handleLeftChange} />
-        <Knob {...centreKnob} color={AMBER} size="large"  sensitivity={0.9} indicator="line"      onChange={handleCentreChange} />
-        <Knob {...rightKnob}  color={AMBER} size="small"  sensitivity={mode === 'play' ? 0.6 : 1} onChange={handleRightChange} />
+        <Knob {...leftKnob}   color={AMBER} size="small"  sensitivity={1}                         flashColor={MODE_COLORS[mode]} onChange={handleLeftChange} />
+        <Knob {...centreKnob} color={AMBER} size="large"  sensitivity={0.9} indicator="line"      flashColor={MODE_COLORS[mode]} onChange={handleCentreChange} />
+        <Knob {...rightKnob}  color={AMBER} size="small"  sensitivity={mode === 'play' ? 0.6 : 1} flashColor={MODE_COLORS[mode]} onChange={handleRightChange} />
       </div>
 
       {/* Footswitch + keyboard hints */}

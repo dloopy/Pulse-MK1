@@ -1,5 +1,5 @@
 // src/components/Knob.jsx
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useKnobDrag } from '../hooks/useKnobDrag'
 
 const START_DEG = 135
@@ -120,7 +120,7 @@ function SmallDotKnobSvg({ norm, color }) {
 
       {/* Arc track */}
       <path d={arcPath(cx, cy, 29.5, START_DEG, START_DEG + TOTAL_DEG)}
-        fill="none" stroke="#B8B3AB" strokeWidth="2" strokeLinecap="round" />
+        fill="none" stroke="#A0998F" strokeWidth="2.5" strokeLinecap="round" />
 
       {/* Active arc */}
       {norm > 0.005 && (<>
@@ -181,7 +181,7 @@ function SmallLineKnobSvg({ norm, color }) {
 
       {/* Arc track */}
       <path d={arcPath(cx, cy, 29.5, START_DEG, START_DEG + TOTAL_DEG)}
-        fill="none" stroke="#B8B3AB" strokeWidth="2" strokeLinecap="round" />
+        fill="none" stroke="#A0998F" strokeWidth="2.5" strokeLinecap="round" />
 
       {/* Active arc */}
       {norm > 0.005 && (<>
@@ -209,12 +209,14 @@ function SmallLineKnobSvg({ norm, color }) {
 }
 
 // ── Knob wrapper ──────────────────────────────────────────────────────────────
-export function Knob({ value, min, max, color, size, indicator, detented, sensitivity = 1, label, displayValue, onChange }) {
-  const svgRef = useRef(null)
+export function Knob({ value, min, max, color, size, indicator, detented, sensitivity = 1, label, displayValue, flashColor, onChange }) {
+  const svgRef    = useRef(null)
+  const labelRef  = useRef(null)
   const norm = Math.max(0, Math.min(1, (value - min) / (max - min)))
 
   useKnobDrag(svgRef, { onChange, sensitivity })
 
+  // Detent pulse animation
   const prevValueRef = useRef(value)
   useEffect(() => {
     if (detented && value !== prevValueRef.current) {
@@ -228,6 +230,19 @@ export function Knob({ value, min, max, color, size, indicator, detented, sensit
     prevValueRef.current = value
   }, [value, detented])
 
+  // Flash label when mode changes (label prop changes) — signals knob was reconfigured
+  const prevLabelRef   = useRef(label)
+  const [flashing, setFlashing] = useState(false)
+  useEffect(() => {
+    if (label !== prevLabelRef.current) {
+      setFlashing(true)
+      const t = setTimeout(() => setFlashing(false), 600)
+      prevLabelRef.current = label
+      return () => clearTimeout(t)
+    }
+    prevLabelRef.current = label
+  }, [label])
+
   const SvgComponent = size === 'large'
     ? LargeKnobSvg
     : indicator === 'dot'
@@ -240,7 +255,13 @@ export function Knob({ value, min, max, color, size, indicator, detented, sensit
       <div ref={svgRef} style={{ display: 'inline-block' }}>
         <SvgComponent norm={norm} color={color} />
       </div>
-      <div className="knob-label" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
+      <div
+        ref={labelRef}
+        className={`knob-label${flashing ? ' knob-label-flash' : ''}`}
+        style={{ color: flashing && flashColor ? flashColor : 'var(--text-tertiary)' }}
+      >
+        {label}
+      </div>
     </div>
   )
 }

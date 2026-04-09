@@ -17,7 +17,11 @@ export function SoundButton({ soundIdx, onClick }) {
   useEffect(() => () => clearTimeout(timerRef.current), [])
 
   return (
-    <button className="icon-btn sound-icon-btn" onClick={handleClick} aria-label="Change sound">
+    <button
+      className="icon-btn sound-icon-btn"
+      onClick={handleClick}
+      aria-label={`Sound: ${SOUNDS[soundIdx].label} — tap to change`}
+    >
       {showLabel
         ? <span className="sound-label">{SOUNDS[soundIdx].label}</span>
         : <SoundSvg soundIdx={soundIdx} />

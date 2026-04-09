@@ -3,6 +3,7 @@ export function CountInButton({ ciOn, onClick }) {
     <div
       className={`icon-btn ci-icon-btn${ciOn ? ' active' : ''}`}
       onClick={onClick}
+      aria-label={ciOn ? 'Count-in on — click to disable' : 'Enable count-in'}
     >
       <div className="ci-inner">
         <div className="ci-arc" />

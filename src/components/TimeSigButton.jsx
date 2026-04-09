@@ -15,6 +15,7 @@ export function TimeSigButton({ tsIdx, onClick }) {
     <div
       className="icon-btn ts-icon-btn"
       onClick={handleClick}
+      aria-label={`Time signature ${n}/${d} — click to change`}
       style={flashing ? { background: '#EEF4E8', borderColor: '#A8CC88' } : {}}
     >
       <div className="ts-num">{n}</div>

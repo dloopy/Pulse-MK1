@@ -20,13 +20,22 @@ export function Footswitch({ mode, running, ciActive, trRunning, onClick }) {
     stateClass = 'run-train'; label = 'stop'
   }
 
+  const ariaLabel = running
+    ? `Stop metronome (currently running at ${mode} mode)`
+    : `Start metronome in ${mode} mode`
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={running}
+      aria-label={ariaLabel}
       className={`footswitch${stateClass ? ` ${stateClass}` : ''}${pressed ? ' pressed' : ''}`}
       onClick={handleClick}
+      onKeyDown={e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleClick() } }}
     >
       <div className="fs-dot" />
-      <div className="fs-lbl">{label}</div>
+      <div className="fs-lbl" aria-hidden="true">{label}</div>
     </div>
   )
 }
