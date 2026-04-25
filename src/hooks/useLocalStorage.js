@@ -1,5 +1,9 @@
 // Note: exports plain functions (not a React hook), but lives in hooks/ per project convention.
 
+// IMPORTANT: keep this key as 'pulse-mk1-state' for backward compatibility.
+// Existing users have settings stored under this key in their browser. Renaming
+// it to 'pulse-state' would silently wipe everyone's saved BPM/volume/training
+// preferences. The 'mk1' here is a historical artifact, not user-visible.
 const KEY = 'pulse-mk1-state'
 
 export const DEFAULT_STATE = {

@@ -196,7 +196,7 @@ export function MetronomePedal() {
 
       {/* Top bar: wordmark + LEDs */}
       <div className="topbar">
-        <div className="wordmark">Pulse · mk1</div>
+        <div className="wordmark">Pulse</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <LEDRow tsIdx={tsIdx} beatIdx={beatIdx} mode={mode} ciActive={ciActive} />
           <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.2em', color: '#C8C3BC', textTransform: 'uppercase' }}>

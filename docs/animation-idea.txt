@@ -1,0 +1,15 @@
+The animations should be functional art — they should reflect something true about what's happening musically, not just be decorative. A few directions that feel right:
+
+In 4/4 play mode, a simple bouncing pulse — maybe a waveform or a walking bassline ASCII tab that scrolls. Something that suggests the groove without being literal.
+
+In 3/4, the classic waltz feel could be shown as a pendulum swinging in three — a simple character pendulum, position changes every beat.
+
+In 6/8, two groups of three could be visualised as two "breathing" shapes.
+
+In train mode, something that shows the arc of the journey — maybe a simple road or a climbing character that rises as BPM increases toward the target.
+
+When stopped, a gentle idle animation — like a resting character or a slow pulse. This is what makes the device feel alive even when not playing.
+
+The key constraint: keep it purely typographic/ASCII so it works at any resolution and feels cohesive with the DM Mono display font we're already using. No SVG illustrations inside the display — characters only.
+
+One honest caveat: this needs to be designed carefully so it doesn't compete with the BPM readout. My instinct is the animation lives alongside the number in play mode (small, to the left or as a background element) and takes over the display when stopped — that's when you have full real estate and it can be more expressive.

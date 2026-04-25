@@ -5,7 +5,21 @@
       "Bash(npx vitest:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(timeout 12 npm run dev)"
+      "Bash(timeout 12 npm run dev)",
+      "Bash(git config:*)",
+      "Bash(gh pr:*)",
+      "Bash(brew list:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx skills:*)",
+      "Bash(npm run:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

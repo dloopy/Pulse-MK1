@@ -1,0 +1,360 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;}
+
+  .doc{
+    max-width:680px;margin:0 auto;padding:32px 24px;
+    display:flex;flex-direction:column;gap:0;
+  }
+
+  .cover{
+    padding:40px 0 32px;
+    border-bottom:1px solid var(--color-border-tertiary);
+    margin-bottom:32px;
+  }
+  .cover-label{
+    font-size:10px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;
+    color:var(--color-text-tertiary);margin-bottom:8px;
+  }
+  .cover-title{
+    font-size:28px;font-weight:500;
+    color:var(--color-text-primary);
+    line-height:1.2;margin-bottom:6px;
+  }
+  .cover-sub{
+    font-size:14px;color:var(--color-text-secondary);
+    font-family:'DM Mono',monospace;font-weight:300;
+  }
+
+  .section{margin-bottom:32px;}
+  .section-title{
+    font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--color-text-tertiary);
+    margin-bottom:14px;padding-bottom:6px;
+    border-bottom:0.5px solid var(--color-border-tertiary);
+  }
+
+  .feature-group{margin-bottom:20px;}
+  .fg-label{
+    font-size:12px;font-weight:600;color:var(--color-text-secondary);
+    margin-bottom:8px;letter-spacing:0.05em;
+  }
+  .feature-list{display:flex;flex-direction:column;gap:5px;}
+  .feature{
+    display:flex;gap:10px;align-items:flex-start;
+    font-size:13px;color:var(--color-text-primary);line-height:1.5;
+  }
+  .f-dot{
+    width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:7px;
+  }
+  .f-dot.must{background:#C8501A;}
+  .f-dot.ideal{background:#4A8FA8;}
+  .f-dot.nice{background:#7A9E5A;}
+
+  .tag{
+    display:inline-block;font-size:10px;font-weight:600;
+    letter-spacing:0.1em;text-transform:uppercase;
+    border-radius:3px;padding:2px 6px;flex-shrink:0;
+    font-family:'DM Mono',monospace;
+  }
+  .tag.must{background:#FDF0EB;color:#A03E12;}
+  .tag.ideal{background:#EBF4F8;color:#2A6A80;}
+  .tag.nice{background:#EEF4E8;color:#4A6E30;}
+
+  .design-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .design-card{
+    background:var(--color-background-secondary);
+    border-radius:var(--border-radius-md);
+    padding:12px 14px;
+  }
+  .dc-label{font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:6px;}
+  .dc-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--color-text-primary);line-height:1.7;}
+
+  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .swatch{
+    display:flex;align-items:center;gap:6px;
+    font-family:'DM Mono',monospace;font-size:11px;color:var(--color-text-secondary);
+  }
+  .swatch-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+
+  .ts-list{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  }
+  .ts-item{
+    background:var(--color-background-secondary);
+    border-radius:var(--border-radius-md);
+    padding:8px;text-align:center;
+  }
+  .ts-frac{font-family:'DM Mono',monospace;font-size:13px;font-weight:400;color:var(--color-text-primary);}
+  .ts-note{font-size:10px;color:var(--color-text-tertiary);margin-top:2px;}
+
+  .anim-table{width:100%;border-collapse:collapse;}
+  .anim-table th{
+    text-align:left;font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;
+    color:var(--color-text-tertiary);padding:6px 8px;
+    border-bottom:0.5px solid var(--color-border-tertiary);
+  }
+  .anim-table td{
+    font-size:12px;color:var(--color-text-primary);padding:8px;
+    border-bottom:0.5px solid var(--color-border-tertiary);
+    vertical-align:top;line-height:1.5;
+  }
+  .anim-table td:first-child{font-family:'DM Mono',monospace;color:var(--color-text-secondary);white-space:nowrap;}
+  .anim-table tr:last-child td{border-bottom:none;}
+
+  .kbd{
+    display:inline-block;border:0.5px solid var(--color-border-secondary);
+    border-radius:3px;padding:1px 6px;
+    font-family:'DM Mono',monospace;font-size:11px;
+    color:var(--color-text-secondary);
+    background:var(--color-background-secondary);
+  }
+
+  .note{
+    font-size:12px;color:var(--color-text-secondary);
+    background:var(--color-background-secondary);
+    border-radius:var(--border-radius-md);
+    padding:10px 14px;line-height:1.6;
+    border-left:2px solid var(--color-border-secondary);
+  }
+
+  .legend{display:flex;gap:16px;margin-bottom:16px;}
+  .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);}
+</style>
+
+<div class="doc">
+
+  <div class="cover">
+    <div class="cover-label">Product specification · v1.0</div>
+    <div class="cover-title">Pulse · mk1</div>
+    <div class="cover-sub">Bass guitar metronome web app</div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="leg-item"><div class="f-dot must" style="width:8px;height:8px;"></div> Must-have</div>
+    <div class="leg-item"><div class="f-dot ideal" style="width:8px;height:8px;"></div> Ideal / v1</div>
+    <div class="leg-item"><div class="f-dot nice" style="width:8px;height:8px;"></div> Nice to have / later</div>
+  </div>
+
+  <!-- CORE FEATURES -->
+  <div class="section">
+    <div class="section-title">Core features</div>
+
+    <div class="feature-group">
+      <div class="fg-label">Tempo</div>
+      <div class="feature-list">
+        <div class="feature"><div class="f-dot must"></div>BPM range 30–240, drag knob or scroll wheel</div>
+        <div class="feature"><div class="f-dot must"></div>Tap tempo — <kbd class="kbd">T</kbd> key or dedicated button</div>
+        <div class="feature"><div class="f-dot must"></div>Start / stop — footswitch button or <kbd class="kbd">space</kbd></div>
+        <div class="feature"><div class="f-dot must"></div>Debounced beat engine restart on drag (no audio glitching)</div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <div class="fg-label">Time signature</div>
+      <div class="feature-list">
+        <div class="feature"><div class="f-dot must"></div>Single cycle button — stacked fraction as icon, no text label</div>
+        <div class="feature"><div class="f-dot must"></div>8 signatures in order of frequency (see table below)</div>
+        <div class="feature"><div class="f-dot must"></div>Beat LEDs rebuild to match beats per bar on each change</div>
+        <div class="feature"><div class="f-dot must"></div>Time sig badge in display top-right, moss green, matches button</div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <div class="fg-label">Subdivision</div>
+      <div class="feature-list">
+        <div class="feature"><div class="f-dot must"></div>Detented knob — 1/32 · 1/16T · 1/16 · 1/8T · 1/8 · 1/4T · 1/4 · 1/2 · whole</div>
+        <div class="feature"><div class="f-dot must"></div>Physical pop animation + position locked on each step</div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <div class="fg-label">Count-in</div>
+      <div class="feature-list">
+        <div class="feature"><div class="f-dot must"></div>Independent toggle button, amber when active</div>
+        <div class="feature"><div class="f-dot must"></div>One bar of amber LEDs + higher-pitched tick before metronome starts</div>
+        <div class="feature"><div class="f-dot must"></div>CI badge in display bottom-right when active</div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <div class="fg-label">Volume</div>
+      <div class="feature-list">
+        <div class="feature"><div class="f-dot must"></div>Continuous knob, 0–100%</div>
+        <div class="feature"><div class="f-dot must"></div>Scales click volume only, no UI feedback sounds</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINER -->
+  <div class="section">
+    <div class="section-title">Tempo trainer</div>
+    <div class="feature-list">
+      <div class="feature"><div class="f-dot ideal"></div>Play / Train mode switch — distinct colour language (terracotta vs steel blue)</div>
+      <div class="feature"><div class="f-dot ideal"></div>In Train mode, knobs remap: Target BPM / Step size / Bars interval</div>
+      <div class="feature"><div class="f-dot ideal"></div>Knob arcs shift to blue, labels update, display shows trainer config</div>
+      <div class="feature"><div class="f-dot ideal"></div>Footswitch starts/stops the trainer advancement</div>
+      <div class="feature"><div class="f-dot ideal"></div>Auto-increments BPM by step every N bars toward target</div>
+      <div class="feature"><div class="f-dot ideal"></div>Progress bar fills along bottom of display as trainer runs</div>
+      <div class="feature"><div class="f-dot ideal"></div>Stops automatically at target, progress bar fades</div>
+      <div class="feature"><div class="f-dot ideal"></div>Step knob fully detented (1–20 BPM), bars detented (1–16)</div>
+    </div>
+  </div>
+
+  <!-- DISPLAY ANIMATIONS -->
+  <div class="section">
+    <div class="section-title">Display animations (TE-inspired)</div>
+    <div class="note" style="margin-bottom:14px;">
+      ASCII/monospace character animations alongside or replacing the BPM number depending on context. Functional art — each animation reflects something true about the musical state. DM Mono only, no SVG illustrations inside the display.
+    </div>
+    <table class="anim-table">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Animation concept</th>
+          <th>Behaviour</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Stopped / idle</td>
+          <td>Resting character — slow breathing pulse</td>
+          <td>Plays on loop while metronome is stopped. Takes over full display.</td>
+        </tr>
+        <tr>
+          <td>4/4 playing</td>
+          <td>Walking bassline tab scrolling left</td>
+          <td>Small, sits left of BPM number. Syncs to beat.</td>
+        </tr>
+        <tr>
+          <td>3/4 playing</td>
+          <td>Three-position pendulum swing</td>
+          <td>Character swings left · centre · right with each beat.</td>
+        </tr>
+        <tr>
+          <td>6/8 playing</td>
+          <td>Two groups of three dots breathing</td>
+          <td>· · · pause · · · — pulses in compound groups.</td>
+        </tr>
+        <tr>
+          <td>5/4 / 7/8 playing</td>
+          <td>Asymmetric block pattern</td>
+          <td>Highlights odd groupings visually — e.g. ■■■□□ for 5/4.</td>
+        </tr>
+        <tr>
+          <td>Train mode running</td>
+          <td>Climbing character or rising line</td>
+          <td>Character position rises proportionally as BPM climbs to target.</td>
+        </tr>
+        <tr>
+          <td>Count-in</td>
+          <td>Countdown bars — 4 · 3 · 2 · 1</td>
+          <td>Replaces BPM during count-in bar.</td>
+        </tr>
+        <tr>
+          <td>Target reached</td>
+          <td>Brief celebration — e.g. \o/</td>
+          <td>Shows for ~1 second then returns to normal.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TIME SIGNATURES -->
+  <div class="section">
+    <div class="section-title">Time signature set</div>
+    <div class="ts-list">
+      <div class="ts-item"><div class="ts-frac">4/4</div><div class="ts-note">default · most common</div></div>
+      <div class="ts-item"><div class="ts-frac">3/4</div><div class="ts-note">waltz · triple</div></div>
+      <div class="ts-item"><div class="ts-frac">6/8</div><div class="ts-note">compound · funk</div></div>
+      <div class="ts-item"><div class="ts-frac">2/4</div><div class="ts-note">march · half-time</div></div>
+      <div class="ts-item"><div class="ts-frac">5/4</div><div class="ts-note">odd · Brubeck</div></div>
+      <div class="ts-item"><div class="ts-frac">7/8</div><div class="ts-note">odd · Balkan</div></div>
+      <div class="ts-item"><div class="ts-frac">12/8</div><div class="ts-note">compound · blues</div></div>
+      <div class="ts-item"><div class="ts-frac">9/8</div><div class="ts-note">compound triple</div></div>
+    </div>
+  </div>
+
+  <!-- DESIGN SYSTEM -->
+  <div class="section">
+    <div class="section-title">Design system</div>
+    <div class="design-grid">
+      <div class="design-card">
+        <div class="dc-label">Typography</div>
+        <div class="dc-val">Display: DM Mono 300<br>Labels: DM Sans 600<br>Body: DM Sans 400</div>
+      </div>
+      <div class="design-card">
+        <div class="dc-label">Colour accents</div>
+        <div class="swatch-row">
+          <div class="swatch"><div class="swatch-dot" style="background:#C8501A;"></div>#C8501A play</div>
+          <div class="swatch"><div class="swatch-dot" style="background:#4A8FA8;"></div>#4A8FA8 train</div>
+          <div class="swatch"><div class="swatch-dot" style="background:#7A9E5A;"></div>#7A9E5A time sig</div>
+          <div class="swatch"><div class="swatch-dot" style="background:#E8A020;"></div>#E8A020 count-in</div>
+        </div>
+      </div>
+      <div class="design-card">
+        <div class="dc-label">Surface palette</div>
+        <div class="swatch-row">
+          <div class="swatch"><div class="swatch-dot" style="background:#F7F5F1;border:1px solid #E0DBD4;"></div>panel</div>
+          <div class="swatch"><div class="swatch-dot" style="background:#EDEAE4;border:1px solid #D4CFC8;"></div>display</div>
+          <div class="swatch"><div class="swatch-dot" style="background:#E8E4DE;border:1px solid #D4CFC8;"></div>stage</div>
+        </div>
+      </div>
+      <div class="design-card">
+        <div class="dc-label">Knob geometry</div>
+        <div class="dc-val">5 concentric rings<br>Arc: 135° → 405°<br>Indicator: coloured line<br>Sub/step: detented</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIONS -->
+  <div class="section">
+    <div class="section-title">Interactions &amp; keyboard</div>
+    <div class="feature-list">
+      <div class="feature"><div class="f-dot must"></div><kbd class="kbd">space</kbd> — start / stop</div>
+      <div class="feature"><div class="f-dot must"></div><kbd class="kbd">T</kbd> — tap tempo (3-second window, averages last taps)</div>
+      <div class="feature"><div class="f-dot must"></div>Tempo knob — drag vertical, scroll wheel, sensitivity 0.9×</div>
+      <div class="feature"><div class="f-dot must"></div>Sub knob — detented drag, 18px threshold per step</div>
+      <div class="feature"><div class="f-dot must"></div>Vol knob — drag vertical, sensitivity 0.6×</div>
+      <div class="feature"><div class="f-dot ideal"></div>Beat engine uses Web Audio API AudioContext scheduling — no setTimeout drift</div>
+      <div class="feature"><div class="f-dot ideal"></div>Debounce restart on drag: 260ms after last knob movement</div>
+      <div class="feature"><div class="f-dot nice"></div>Dark mode — same pedal concept, inverted surface palette</div>
+      <div class="feature"><div class="f-dot nice"></div>Neo-brutalist theme toggle (same layout, different skin)</div>
+    </div>
+  </div>
+
+  <!-- FUTURE / PRO VERSION -->
+  <div class="section">
+    <div class="section-title">Pro version (mk2 — future)</div>
+    <div class="feature-list">
+      <div class="feature"><div class="f-dot nice"></div>Gap click / mute training — N bars on, N bars silent</div>
+      <div class="feature"><div class="f-dot nice"></div>Setlist / song presets with saved BPM + time sig</div>
+      <div class="feature"><div class="f-dot nice"></div>Swing / feel slider (0% straight → 50% swung)</div>
+      <div class="feature"><div class="f-dot nice"></div>Accent editor — per-beat accent pattern</div>
+      <div class="feature"><div class="f-dot nice"></div>Practice session timer</div>
+      <div class="feature"><div class="f-dot nice"></div>Polyrhythm mode</div>
+      <div class="feature"><div class="f-dot nice"></div>Click sound selector (woodblock, rim, hi-hat, sine, human voice)</div>
+      <div class="feature"><div class="f-dot nice"></div>Click on 2 &amp; 4 only (backbeat mode)</div>
+    </div>
+  </div>
+
+  <!-- TECH -->
+  <div class="section">
+    <div class="section-title">Technical requirements</div>
+    <div class="feature-list">
+      <div class="feature"><div class="f-dot must"></div>Web Audio API AudioContext for all timing — no setInterval for beats</div>
+      <div class="feature"><div class="f-dot must"></div>Lookahead scheduler pattern (schedule beats ~100ms ahead)</div>
+      <div class="feature"><div class="f-dot must"></div>React + Tailwind (Claude Code build)</div>
+      <div class="feature"><div class="f-dot must"></div>No external audio libraries — synthesise clicks via OscillatorNode</div>
+      <div class="feature"><div class="f-dot must"></div>All UI sounds: zero. Only metronome beat makes audio.</div>
+      <div class="feature"><div class="f-dot must"></div>Mobile-responsive — touch drag on all knobs</div>
+      <div class="feature"><div class="f-dot ideal"></div>LocalStorage for BPM, time sig, vol, mode persistence across sessions</div>
+    </div>
+  </div>
+
+</div>

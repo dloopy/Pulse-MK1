@@ -1,4 +1,4 @@
-# PULSE MK1
+# PULSE
 
 > A precision metronome for musicians who care about how their tools look and feel.
 
@@ -28,7 +28,7 @@
 
 ## What it is
 
-Pulse MK1 is a browser-based metronome built to feel like a piece of physical hardware — something between a Braun desk instrument and a Teenage Engineering OP-1. No ads, no accounts, no fluff. Just a very precise click and a UI that looks good on your screen while you practice.
+Pulse is a browser-based metronome built to feel like a piece of physical hardware — something between a Braun desk instrument and a Teenage Engineering OP-1. No ads, no accounts, no fluff. Just a very precise click and a UI that looks good on your screen while you practice.
 
 It runs entirely in the browser. Zero backend. All sound is synthesised in real-time using the Web Audio API.
 
@@ -166,4 +166,4 @@ src/
 
 ---
 
-*MK1 — first hardware revision. More to come.*
+*Built with care. Use it daily.*
